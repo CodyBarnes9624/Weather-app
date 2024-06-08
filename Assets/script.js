@@ -23,44 +23,50 @@ document.addEventListener('DOMContentLoaded', function () {
 
     populateDropdown();
 
+    // Function to generate the weather icon URL
+    function getWeatherIconUrl(iconCode) {
+        return `http://openweathermap.org/img/wn/${iconCode}@2x.png`;
+    }
+
     // Listen for click on getWeather button (for five-day forecast)
     document.getElementById('getWeather').addEventListener('click', function () {
         const API_KEY = 'c001c20a4ba13dc7e4270b22e9c1034a';
         const CITY = document.querySelector('.userInput').value.charAt(0).toUpperCase() + document.querySelector('.userInput').value.slice(1).toLowerCase();
         const today = new Date();
         const tomorrow = new Date(today);
-        tomorrow.setDate(today.getDate() + 1); // Start from tomorrow
+        tomorrow.setDate(today.getDate() + 1); 
         const startDate = tomorrow.toISOString().split('T')[0];
 
-        const fiveDayForecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${CITY}&appid=${API_KEY}&cnt=40`; // Fetching a larger count to ensure we have enough data
+        const fiveDayForecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${CITY}&appid=${API_KEY}&cnt=40`; 
 
         fetch(fiveDayForecastUrl)
             .then(function (response) {
                 return response.json();
             })
             .then(function (data) {
-                console.log("Five Day Forecast Data \n----------");
-                let forecastHTML = ''; // Initialize an empty string to accumulate forecast cards
-                let displayedDates = []; // Array to track displayed dates
+                let forecastHTML = '';
+                let displayedDates = [];
 
                 // Loop through the list of forecasts
                 for (let i = 0; i < data.list.length; i++) {
                     const forecast = data.list[i];
-                    const forecastDate = new Date(forecast.dt * 1000); // Convert timestamp to date object
+                    const forecastDate = new Date(forecast.dt * 1000); 
                     const dateText = forecastDate.toISOString().split('T')[0];
 
                     // Check if the date is unique and add to forecastHTML
-                    if (!displayedDates.includes(dateText) && dateText > startDate) {
+                    if (!displayedDates.includes(dateText) && dateText >= startDate) {
                         displayedDates.push(dateText);
                         const temperature = ((forecast.main.temp - 273.15) * 9/5 + 32).toFixed(2);
                         const weatherDescription = forecast.weather[0].main;
                         const humidity = forecast.main.humidity;
                         const windSpeed = forecast.wind.speed;
+                        const iconCode = forecast.weather[0].icon;
+                        const iconUrl = getWeatherIconUrl(iconCode);
 
-                        // Create HTML for each forecast card and append to forecastHTML
                         forecastHTML += `
                             <div class="weather-card">
                                 <h2>Weather in ${CITY} - ${dateText}</h2>
+                                <img src="${iconUrl}" alt="${weatherDescription}">
                                 <p>Temperature: ${temperature}°F</p>
                                 <p>Condition: ${weatherDescription}</p>
                                 <p>Humidity: ${humidity}%</p>
@@ -69,8 +75,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         `;
                     }
 
-                    // Break the loop once we have displayed five unique dates
+                    // Break the loop once we have displayed five
                     if (displayedDates.length >= 5) {
+                        console.log("testing break");
                         break;
                     }
                 }
@@ -83,10 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('fiveDay').style.color = '#1a2639';
             })
             .catch(function (error) {
-                console.error('Error fetching five-day forecast data:', error);
-                document.getElementById('fiveDay').innerHTML = '<p>Error fetching weather data. Please try again.</p>';
-                document.getElementById('fiveDay').style.backgroundColor = '#1a2639'; // Dark background color
-                document.getElementById('fiveDay').style.color = 'white'; // White text color
+                alert("Please ensure you're entering a real city!");
             });
     });
 
@@ -101,22 +105,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 return response.json();
             })
             .then(function (data) {
-                console.log('Current Weather Data \n----------');
                 console.log(data);
 
                 if (data.cod === '404') {
-                    document.getElementById('weatherContainer').innerHTML = '<p>City not found. Please try again.</p>';
-                    document.getElementById('weatherContainer').style.backgroundColor = '#1a2639';
-                    document.getElementById('weatherContainer').style.color = 'white';
+                    console.log("404");
                 } else {
-                    const temperature = ((data.main.temp - 273.15) * 9/5 + 32).toFixed(2); // Convert from Kelvin to Fahrenheit
+                    const temperature = ((data.main.temp - 273.15) * 9/5 + 32).toFixed(2);
                     const weatherDescription = data.weather[0].main;
                     const humidity = data.main.humidity;
                     const windSpeed = data.wind.speed;
+                    const iconCode = data.weather[0].icon;
+                    const iconUrl = getWeatherIconUrl(iconCode);
 
                     const weatherHTML = `
                         <div class="weather-card">
                             <h2>Weather in ${CITY}</h2>
+                            <img src="${iconUrl}" alt="${weatherDescription}">
                             <p>Temperature: ${temperature}°F</p>
                             <p>Condition: ${weatherDescription}</p>
                             <p>Humidity: ${humidity}%</p>
@@ -136,8 +140,8 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(function (error) {
                 console.error('Error fetching current weather data:', error);
                 document.getElementById('weatherContainer').innerHTML = '<p>Error fetching weather data. Please try again.</p>';
-                document.getElementById('weatherContainer').style.backgroundColor = '#1a2639'; // Dark background color
-                document.getElementById('weatherContainer').style.color = 'white'; // White text color
+                document.getElementById('weatherContainer').style.backgroundColor = '#1a2639';
+                document.getElementById('weatherContainer').style.color = 'white';
             });
     });
 
@@ -152,7 +156,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return response.json();
             })
             .then(function (data) {
-                console.log('Saved Weather Data \n----------');
                 console.log(data);
 
                 if (data.cod === '404') {
@@ -164,10 +167,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     const weatherDescription = data.weather[0].main;
                     const humidity = data.main.humidity;
                     const windSpeed = data.wind.speed;
+                    const iconCode = data.weather[0].icon;
+                    const iconUrl = getWeatherIconUrl(iconCode);
 
                     const weatherHTML = `
                         <div class="weather-card">
                             <h2>Weather in ${selectedCity}</h2>
+                            <img src="${iconUrl}" alt="${weatherDescription}">
                             <p>Temperature: ${temperature}°F</p>
                             <p>Condition: ${weatherDescription}</p>
                             <p>Humidity: ${humidity}%</p>
